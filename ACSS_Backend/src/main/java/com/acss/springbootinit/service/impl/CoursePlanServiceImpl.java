@@ -9,7 +9,7 @@ import com.acss.springbootinit.model.entity.CoursePlan;
 import com.acss.springbootinit.model.entity.Schedule;
 import com.acss.springbootinit.model.dto.course.EchartsDTO;
 import com.acss.springbootinit.mapper.*;
-import com.acss.springbootinit.service.CoursePlanService;
+import com.acss.springbootinit.service.ICoursePlanService;
 import com.acss.springbootinit.utils.CourseArrangementUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ import java.util.*;
  */
 @Service
 @Slf4j
-public class CoursePlanServiceImpl extends ServiceImpl<CoursePlanMapper, CoursePlan> implements CoursePlanService {
+public class CoursePlanServiceImpl extends ServiceImpl<CoursePlanMapper, CoursePlan> implements ICoursePlanService {
     @Resource
     private CoursePlanMapper coursePlanMapper;
     @Resource

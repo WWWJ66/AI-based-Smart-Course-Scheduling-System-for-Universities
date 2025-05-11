@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import java.util.List;
 
 
-public interface CoursePlanService extends IService<CoursePlan> {
+public interface ICoursePlanService extends IService<CoursePlan> {
 
     String courseScheduling(String term);
 

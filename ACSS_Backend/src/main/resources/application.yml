@@ -78,3 +78,6 @@ knife4j:
         api-rule: package
         api-rule-resources:
           - com.acss.springbootinit.controller
+files:
+  upload:
+    path: D:/code/Course Arrangement/upload/  #更换为你的文件上传路径

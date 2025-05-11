@@ -7,69 +7,69 @@ import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
 import java.io.Serializable;
 import java.util.Date;
-import lombok.Data;
+import java.util.List;
 
-/**
- * 用户
- */
-@TableName(value = "user")
-@Data
+import com.fasterxml.jackson.annotation.JsonProperty;
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+
+@Getter
+@Setter
+@ApiModel(value = "User对象", description = "")
 public class User implements Serializable {
 
+    //构造方法
+    public User() {
+    }
+
+    public User(String userNo, String password, String newPassword) {
+        this.userNo = userNo;
+        this.password = password;
+        this.newPassword = newPassword;
+    }
+
+    private static final long serialVersionUID = 1L;
+
+    @ApiModelProperty("id")
+    @TableId(value = "id", type = IdType.AUTO)
+    private Integer id;
+
+    @ApiModelProperty("用户账号")
+    private String userNo;
+
+    @ApiModelProperty("用户密码")
     /**
-     * id
+     * 密码
      */
-    @TableId(type = IdType.ASSIGN_ID)
-    private Long id;
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    private String password;
 
-    /**
-     * 用户账号
-     */
-    private String userAccount;
+    @ApiModelProperty("用户角色")
+    private String role;
 
-    /**
-     * 用户密码
-     */
-    private String userPassword;
+    @ApiModelProperty("用户名")
+    private String username;
 
-    /**
-     * 开放平台id
-     */
-    private String unionId;
+    @ApiModelProperty("用户头像")
+    private String avatarUrl;
 
+    @ApiModelProperty("个性签名")
+    private String signature;
 
-    /**
-     * 用户昵称
-     */
-    private String userName;
-
-    /**
-     * 用户头像
-     */
-    private String userAvatar;
-
-
-    /**
-     * 用户角色：user/admin/ban
-     */
-    private String userRole;
-
-    /**
-     * 创建时间
-     */
-    private Date createTime;
-
-    /**
-     * 更新时间
-     */
-    private Date updateTime;
-
-    /**
-     * 是否删除
-     */
-    @TableLogic
-    private Integer isDelete;
 
     @TableField(exist = false)
-    private static final long serialVersionUID = 1L;
+    private String token;
+
+    @TableField(exist = false)
+    private String telephone;
+
+    @TableField(exist = false)
+    private List<Menu> menus;
+
+    @TableField(exist = false)
+    private String newPassword;
+
 }

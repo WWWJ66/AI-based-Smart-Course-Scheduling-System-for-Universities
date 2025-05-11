@@ -1,235 +1,171 @@
 package com.acss.springbootinit.service.impl;
 
-import static com.acss.springbootinit.constant.UserConstant.USER_LOGIN_STATE;
 
-import cn.hutool.core.collection.CollUtil;
+
+import cn.dev33.satoken.secure.SaSecureUtil;
+import cn.dev33.satoken.stp.StpUtil;
+
+import cn.hutool.log.Log;
+import com.acss.springbootinit.constant.ConstantInfo;
+import com.acss.springbootinit.exception.ServiceException;
+import com.acss.springbootinit.mapper.RoleMapper;
+import com.acss.springbootinit.mapper.RoleMenuMapper;
+import com.acss.springbootinit.model.dto.user.UserDTO;
+import com.acss.springbootinit.model.entity.Menu;
+import com.acss.springbootinit.service.IMenuService;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.acss.springbootinit.common.ErrorCode;
-import com.acss.springbootinit.constant.CommonConstant;
-import com.acss.springbootinit.exception.BusinessException;
+
 import com.acss.springbootinit.mapper.UserMapper;
-import com.acss.springbootinit.model.dto.user.UserQueryRequest;
+
 import com.acss.springbootinit.model.entity.User;
-import com.acss.springbootinit.model.enums.UserRoleEnum;
-import com.acss.springbootinit.model.vo.LoginUserVO;
-import com.acss.springbootinit.model.vo.UserVO;
-import com.acss.springbootinit.service.UserService;
-import com.acss.springbootinit.utils.SqlUtils;
+
+import com.acss.springbootinit.service.IUserService;
+
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import javax.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
+
+import javax.annotation.Resource;
+
 import org.springframework.stereotype.Service;
-import org.springframework.util.DigestUtils;
+
 
 /**
  * 用户服务实现
  */
 @Service
-@Slf4j
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+    private static final Log LOG = Log.get();
+    @Resource
+    private UserMapper userMapper;
 
-    /**
-     * 盐值，混淆密码
-     */
-    public static final String SALT = "acss";
+    @Resource
+    private RoleMapper roleMapper;
+
+    @Resource
+    private RoleMenuMapper roleMenuMapper;
+
+
+    @Resource
+    private IMenuService menuService;
 
     @Override
-    public long userRegister(String userAccount, String userPassword, String checkPassword) {
-        // 1. 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword, checkPassword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
-        }
-        if (userAccount.length() < 4) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
-        }
-        if (userPassword.length() < 8 || checkPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
-        }
-        // 密码和校验密码相同
-        if (!userPassword.equals(checkPassword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次输入的密码不一致");
-        }
-        synchronized (userAccount.intern()) {
-            // 账户不能重复
-            QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-            queryWrapper.eq("userAccount", userAccount);
-            long count = this.baseMapper.selectCount(queryWrapper);
-            if (count > 0) {
-                throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号重复");
-            }
-            // 2. 加密
-            String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-            // 3. 插入数据
-            User user = new User();
-            user.setUserAccount(userAccount);
-            user.setUserPassword(encryptPassword);
-            boolean saveResult = this.save(user);
-            if (!saveResult) {
-                throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
-            }
-            return user.getId();
+    public User login(User user) {
+        User one = getUserInfo(user);
+        if (one != null) {//登录成功
+            //sa_token设置token
+            StpUtil.login(user.getUserNo());
+            String token = StpUtil.getTokenInfo().tokenValue;
+            one.setToken(token);
+            String role = one.getRole();  //ROLE_ADMIN
+            //设置用户菜单列表
+            List<Menu> roleMenus = getRoleMenus(role);
+            one.setMenus(roleMenus);
+            return one;
+        } else {
+            throw new ServiceException(ConstantInfo.CODE_600, "用户名或密码错误");
         }
     }
 
     @Override
-    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
-        // 1. 校验
-        if (StringUtils.isAnyBlank(userAccount, userPassword)) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+    public void updatePassword(User user) {
+        //AES先进行加密操作
+        String oldCiphertext = SaSecureUtil.aesEncrypt(user.getUserNo()+user.getPassword(), user.getPassword());
+        String newCiphertext = SaSecureUtil.aesEncrypt(user.getUserNo()+user.getNewPassword(), user.getNewPassword());
+        user.setPassword(oldCiphertext);   //旧密码
+        user.setNewPassword(newCiphertext);  //新密码
+        int update = userMapper.updatePassword(user);
+        if (update < 1) {
+            throw new ServiceException(ConstantInfo.CODE_600, "密码错误");
         }
-        if (userAccount.length() < 4) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号错误");
+    }
+    @Override
+    public String getUserCollege(String userNo) {
+        return userMapper.getUserCollege(userNo);
+    }
+
+    @Override
+    public int editUserRole(Integer id, String role) {
+        return userMapper.editUserRole(id, role);
+    }
+
+    //重置密码
+    @Override
+    public int resetPassword(String userNo) {
+        String password = "";
+        User user = userMapper.selectById(userNo);
+        if (user.getRole().equals("ROLE_STUDENT")) {
+            password = user.getUserNo().substring(user.getUserNo().length() - 6);   //学号后六位
+        } else {
+            password = "9" + user.getUserNo();                 //9+工号
         }
-        if (userPassword.length() < 8) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "密码错误");
-        }
-        // 2. 加密
-        String encryptPassword = DigestUtils.md5DigestAsHex((SALT + userPassword).getBytes());
-        // 查询用户是否存在
+        String ciphertext = SaSecureUtil.aesEncrypt(user.getUserNo()+password, password);
+        return userMapper.resetPassword(userNo, ciphertext);
+    }
+
+    @Override
+    public UserDTO getUserRoleAndCollege(String userNo) {
+        return userMapper.getUserRoleAndCollege(userNo);
+    }
+
+    @Override
+    public String getUserTelephone(String userNo) {
+        return userMapper.getUserTelephone(userNo);
+    }
+
+    @Override
+    public int editStudentTelephone(String userNo, String telephone) {
+        return userMapper.editStudentTelephone(userNo,telephone);
+    }
+
+    @Override
+    public int editTeacherTelephone(String userNo, String telephone) {
+        return userMapper.editTeacherTelephone(userNo,telephone);
+    }
+
+    //此处此修改过，原为private
+    public User getUserInfo(User user) {  //登录判断
         QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq("userAccount", userAccount);
-        queryWrapper.eq("userPassword", encryptPassword);
-        User user = this.baseMapper.selectOne(queryWrapper);
-        // 用户不存在
-        if (user == null) {
-            log.info("user login failed, userAccount cannot match userPassword");
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        // 加密  使用用户账号加密码作为key    AES加密
+        String ciphertext = SaSecureUtil.aesEncrypt(user.getUserNo()+user.getPassword(), user.getPassword());
+        System.out.println("AES加密后：" + ciphertext);
+
+        queryWrapper.eq("user_no", user.getUserNo());
+        queryWrapper.eq("password", ciphertext);
+        User one;
+        try {
+            one = getOne(queryWrapper); // 从数据库查询用户信息
+        } catch (Exception e) {
+            LOG.error(e);
+            throw new ServiceException(ConstantInfo.CODE_500, "系统错误");
         }
-        // 3. 记录用户的登录态
-        request.getSession().setAttribute(USER_LOGIN_STATE, user);
-        return this.getLoginUserVO(user);
+        return one;
     }
 
-
     /**
-     * 获取当前登录用户
+     * 获取当前角色的菜单列表
      *
-     * @param request
+     * @param roleFlag
      * @return
      */
-    @Override
-    public User getLoginUser(HttpServletRequest request) {
-        // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
+    private List<Menu> getRoleMenus(String roleFlag) {
+        Integer roleId = roleMapper.selectByFlag(roleFlag);
+        //当前角色的所有菜单id集合
+        List<Integer> menuIds = roleMenuMapper.selectByRoleId(roleId);
+        //查出系统所有的菜单
+        List<Menu> menus = menuService.findMenus("");
+        //new一个最后筛选完成之后的list
+        List<Menu> roleMenus = new ArrayList<>();
+        //筛选当前用户角色的菜单
+        for (Menu menu : menus) {
+            //包含就往里面丢
+            if (menuIds.contains(menu.getId())) {
+                roleMenus.add(menu);
+            }
+            List<Menu> children = menu.getChildren();
+            //移除children里面不在menuIds集合中的元素
+            children.removeIf(child -> !menuIds.contains((child.getId())));
         }
-        // 从数据库查询（追求性能的话可以注释，直接走缓存）
-        long userId = currentUser.getId();
-        currentUser = this.getById(userId);
-        if (currentUser == null) {
-            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR);
-        }
-        return currentUser;
-    }
-
-    /**
-     * 获取当前登录用户（允许未登录）
-     *
-     * @param request
-     * @return
-     */
-    @Override
-    public User getLoginUserPermitNull(HttpServletRequest request) {
-        // 先判断是否已登录
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User currentUser = (User) userObj;
-        if (currentUser == null || currentUser.getId() == null) {
-            return null;
-        }
-        // 从数据库查询（追求性能的话可以注释，直接走缓存）
-        long userId = currentUser.getId();
-        return this.getById(userId);
-    }
-
-    /**
-     * 是否为管理员
-     *
-     * @param request
-     * @return
-     */
-    @Override
-    public boolean isAdmin(HttpServletRequest request) {
-        // 仅管理员可查询
-        Object userObj = request.getSession().getAttribute(USER_LOGIN_STATE);
-        User user = (User) userObj;
-        return isAdmin(user);
-    }
-
-    @Override
-    public boolean isAdmin(User user) {
-        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
-    }
-
-    /**
-     * 用户注销
-     *
-     * @param request
-     */
-    @Override
-    public boolean userLogout(HttpServletRequest request) {
-        if (request.getSession().getAttribute(USER_LOGIN_STATE) == null) {
-            throw new BusinessException(ErrorCode.OPERATION_ERROR, "未登录");
-        }
-        // 移除登录态
-        request.getSession().removeAttribute(USER_LOGIN_STATE);
-        return true;
-    }
-
-    @Override
-    public LoginUserVO getLoginUserVO(User user) {
-        if (user == null) {
-            return null;
-        }
-        LoginUserVO loginUserVO = new LoginUserVO();
-        BeanUtils.copyProperties(user, loginUserVO);
-        return loginUserVO;
-    }
-
-    @Override
-    public UserVO getUserVO(User user) {
-        if (user == null) {
-            return null;
-        }
-        UserVO userVO = new UserVO();
-        BeanUtils.copyProperties(user, userVO);
-        return userVO;
-    }
-
-    @Override
-    public List<UserVO> getUserVO(List<User> userList) {
-        if (CollUtil.isEmpty(userList)) {
-            return new ArrayList<>();
-        }
-        return userList.stream().map(this::getUserVO).collect(Collectors.toList());
-    }
-
-    @Override
-    public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
-        if (userQueryRequest == null) {
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
-        }
-        Long id = userQueryRequest.getId();
-        String unionId = userQueryRequest.getUnionId();
-
-        String userName = userQueryRequest.getUserName();
-
-        String userRole = userQueryRequest.getUserRole();
-        String sortField = userQueryRequest.getSortField();
-        String sortOrder = userQueryRequest.getSortOrder();
-        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
-        queryWrapper.eq(id != null, "id", id);
-        queryWrapper.eq(StringUtils.isNotBlank(unionId), "unionId", unionId);
-        queryWrapper.eq(StringUtils.isNotBlank(userRole), "userRole", userRole);
-        queryWrapper.like(StringUtils.isNotBlank(userName), "userName", userName);
-        queryWrapper.orderBy(SqlUtils.validSortField(sortField), sortOrder.equals(CommonConstant.SORT_ORDER_ASC),
-                sortField);
-        return queryWrapper;
+        return roleMenus;
     }
 }
