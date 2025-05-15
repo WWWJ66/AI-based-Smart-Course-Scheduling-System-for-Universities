@@ -11,7 +11,7 @@
       </el-header>
 
       <el-main >
-        <!--        表示当前页面的子路由会在 <router-view /> 里面展示-->
+        <!-- 表示当前页面的子路由会在 <router-view /> 里面展示-->
         <router-view  @refreshUser="getUser" />
         <!-- 这里添加一个新的嵌套的 router-view 用于显示文章详情 -->
         <router-view name="notificationDetail"></router-view>
