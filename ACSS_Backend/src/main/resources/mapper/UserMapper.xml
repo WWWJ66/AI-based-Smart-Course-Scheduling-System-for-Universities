@@ -1,24 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.acss.springbootinit.mapper.UserMapper">
-    <resultMap id="BaseResultMap" type="com.acss.springbootinit.model.entity.User">
-        <id property="id" column="id" jdbcType="BIGINT"/>
-        <result property="unionId" column="unionId" jdbcType="VARCHAR"/>
-        <result property="mpOpenId" column="mpOpenId" jdbcType="VARCHAR"/>
-        <result property="userName" column="userName" jdbcType="VARCHAR"/>
-        <result property="userAvatar" column="userAvatar" jdbcType="VARCHAR"/>
-        <result property="userProfile" column="userProfile" jdbcType="VARCHAR"/>
-        <result property="userRole" column="userRole" jdbcType="VARCHAR"/>
-        <result property="createTime" column="createTime" jdbcType="TIMESTAMP"/>
-        <result property="updateTime" column="updateTime" jdbcType="TIMESTAMP"/>
-        <result property="isDelete" column="isDelete" jdbcType="TINYINT"/>
-    </resultMap>
+    <!--    使用了CASE语句来判断teacher和student表中的college_no是否为空。-->
+    <select id="getUserRoleAndCollege" resultType="com.acss.springbootinit.model.dto.user.UserDTO">
+        SELECT u.role AS role,
+               CASE
+                   WHEN t.college_no IS NOT NULL THEN t.college_no
+                   WHEN s.college_no IS NOT NULL THEN s.college_no
+                   ELSE NULL
+                   END AS college
+        FROM user u
+                 LEFT JOIN teacher t ON u.user_no = t.teacher_no
+                 LEFT JOIN student s ON u.user_no = s.student_no
+        WHERE u.user_no = #{userNo}
+    </select>
 
-    <sql id="Base_Column_List">
-        id,unionId,
-        userName,userAvatar,
-        userRole,createTime,updateTime,isDelete
-    </sql>
+
+    <select id="getUserTelephone" resultType="String">
+        SELECT CASE
+                   WHEN t.telephone IS NOT NULL THEN t.telephone
+                   WHEN s.telephone IS NOT NULL THEN s.telephone
+                   ELSE NULL
+                   END AS telephone
+        FROM user u
+                 LEFT JOIN teacher t ON u.user_no = t.teacher_no
+                 LEFT JOIN student s ON u.user_no = s.student_no
+        WHERE u.user_no = #{userNo}
+    </select>
 </mapper>
