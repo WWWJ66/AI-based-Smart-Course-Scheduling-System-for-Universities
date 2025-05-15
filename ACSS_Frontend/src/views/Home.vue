@@ -89,6 +89,8 @@ export default {
   methods: {
     async load() {
       try {
+        console.log(localStorage.getItem("user"));
+
         const res = await this.request.get("/notification/page", {
           params: {
             title: this.title,
