@@ -65,6 +65,7 @@ public class CoursePlanController {
         }
     }
 
+    //批量删除
     @PostMapping("/del/batch")
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -92,7 +93,7 @@ public class CoursePlanController {
         }
     }
 
-
+    //分页获取
     @GetMapping("/page")
     public Result findPage(@RequestParam Integer pageNum, @RequestParam Integer pageSize,
                            @RequestParam(defaultValue = "") String term,
@@ -131,13 +132,7 @@ public class CoursePlanController {
         return Result.success(coursePlanService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
 
-
-    /**
-     * 排课算法接口，传入学期开始去查对应学期的开课任务，进行排课，
-     *
-     * @param term
-     * @return
-     */
+    //排课
     @SaCheckRole("ROLE_ADMINISTRATOR")
     @GetMapping("/arrange/{term}")
     public Result arrange(@PathVariable("term") String term) {

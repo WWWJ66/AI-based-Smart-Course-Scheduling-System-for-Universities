@@ -69,6 +69,7 @@ public class CoursePlanServiceImpl extends ServiceImpl<CoursePlanMapper, CourseP
             Map<String, List<String>> evolutionPopulation = geneticEvolution(initializePopulation);
             // 5、选出适应度最高的个体
             List<String> bestIndividual = findBestIndividual(evolutionPopulation);
+
             //上面进行时间分配，下面分配教室
             // 6、分配教室并做教室冲突检测
             List<String> resultList = finalResult(bestIndividual);
@@ -255,7 +256,6 @@ public class CoursePlanServiceImpl extends ServiceImpl<CoursePlanMapper, CourseP
         }
         return mutatedPopulation;
     }
-
 
     //遗传进化
     private Map<String, List<String>> geneticEvolution(Map<String, List<String>> noConflictPopulation) {
