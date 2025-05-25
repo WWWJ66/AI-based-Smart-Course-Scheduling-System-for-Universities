@@ -1,76 +1,196 @@
-<template >
-  <div>
-    <div style="margin: 10px 0">
-    <el-select  style="width: 200px" v-model="grade"  placeholder="请选择年级" @change="handleGradeChange">
-      <el-option v-for="item in grades" :key="item.name" :label="item.name" :value="item.value">
-        {{ item.name }}
-      </el-option>
-    </el-select>
+<template>
+  <div class="container">
+    <!-- 筛选条件卡片 -->
+    <el-card class="filter-card" shadow="hover">
+      <div class="filter-container">
+        <el-select 
+          v-model="grade"
+          placeholder="请选择年级"
+          class="animated-select"
+          @change="handleGradeChange"
+          style="width: 200px">
+          <el-option 
+            v-for="item in grades"
+            :key="item.name"
+            :label="item.name"
+            :value="item.value"
+            class="option-item">
+            <i class="el-icon-notebook-2"></i> {{ item.name }}
+          </el-option>
+        </el-select>
 
-      <el-select  style="width: 200px" v-model="college"  class="ml-5" v-if="isAdministrator" placeholder="请选择学院" @change="handleCollegeChange">
-        <el-option v-for="item in colleges" :key="item.name" :label="item.name" :value="item.value">
-          {{ item.name }}
-        </el-option>
-      </el-select>
+        <el-select 
+          v-model="college"
+          class="ml-5 animated-select"
+          v-if="isAdministrator"
+          placeholder="请选择学院"
+          @change="handleCollegeChange"
+          style="width: 200px">
+          <el-option 
+            v-for="item in colleges"
+            :key="item.name"
+            :label="item.name"
+            :value="item.value"
+            class="option-item">
+            <i class="el-icon-office-building"></i> {{ item.name }}
+          </el-option>
+        </el-select>
 
-      <el-select   style="width: 200px" v-model="classNo" class="ml-5" placeholder="请选择班级">
-        <el-option v-for="item in selectClassInfos" :key="item.className" :label="item.className" :value="item.classNo">
-          {{ item.className }}
-        </el-option>
-      </el-select>
-      <el-input clearable style="width: 200px" placeholder="请输入学号" suffix-icon="el-icon-search" class="ml-5" v-model="studentNo"></el-input>
-      <el-input clearable style="width: 200px" placeholder="请输入姓名" suffix-icon="el-icon-s-custom" class="ml-5" v-model="studentName"></el-input>
-      <el-button class="ml-5" type="primary" @click="load">搜索</el-button>
-      <el-button type="warning" @click="reset">重置</el-button>
-    </div>
+        <el-select 
+          v-model="classNo"
+          class="ml-5 animated-select"
+          placeholder="请选择班级"
+          style="width: 200px">
+          <el-option 
+            v-for="item in selectClassInfos"
+            :key="item.className"
+            :label="item.className"
+            :value="item.classNo"
+            class="option-item">
+            <i class="el-icon-s-management"></i> {{ item.className }}
+          </el-option>
+        </el-select>
 
-    <div style="margin: 10px 0">
-      <el-button type="primary" @click="handleAdd">新增 <i class="el-icon-circle-plus-outline"></i></el-button>
-      <el-popconfirm
-          class="ml-5"
-          confirm-button-text='确定'
-          cancel-button-text='取消'
-          icon="el-icon-info"
-          icon-color="red"
-          title="您确定批量删除这些数据吗？"
-          @confirm="delBatch">
-        <el-button type="danger" slot="reference">批量删除 <i class="el-icon-remove-outline"></i></el-button>
-      </el-popconfirm>
+        <el-input 
+          clearable 
+          placeholder="请输入学号" 
+          suffix-icon="el-icon-search" 
+          class="ml-5 animated-input"
+          v-model="studentNo"
+          style="width: 200px">
+          <template #prefix>
+            <i class="el-icon-user"></i>
+          </template>
+        </el-input>
 
-      <el-upload action="http://localhost:8081/student/import" :show-file-list="false" accept="xlsx" :on-success="handleExcelImportSuccess"   :headers="uploadHeaders" style="display: inline-block">
-        <el-button type="info" class="ml-5">导入 <i class="el-icon-bottom"></i></el-button>
-      </el-upload>
+        <el-input 
+          clearable 
+          placeholder="请输入姓名" 
+          suffix-icon="el-icon-s-custom" 
+          class="ml-5 animated-input"
+          v-model="studentName"
+          style="width: 200px">
+          <template #prefix>
+            <i class="el-icon-edit"></i>
+          </template>
+        </el-input>
 
-      <el-button type="info" @click="exp" class="ml-5">导出 <i class="el-icon-top"></i></el-button>
-    </div>
+        <el-button 
+          class="ml-5 search-btn"
+          type="primary" 
+          @click="load"
+          icon="el-icon-search">
+          搜索
+        </el-button>
+        <el-button 
+          class="reset-btn"
+          type="info" 
+          @click="reset"
+          icon="el-icon-refresh">
+          重置
+        </el-button>
+      </div>
+    </el-card>
 
-    <el-table :data="tableData" border stripe :header-cell-class-name="'headerBg'"  @selection-change="handleSelectionChange">
-      <el-table-column type="selection" width="50"></el-table-column>
-      <el-table-column prop="grade" label="年级" width="80"></el-table-column>
-      <el-table-column prop="college" label="学院" width="150"></el-table-column>
-      <el-table-column prop="className" label="班级" width="200"></el-table-column>
-      <el-table-column prop="studentNo" label="学号" ></el-table-column>
-      <el-table-column prop="studentName" label="姓名"></el-table-column>
-      <el-table-column prop="telephone" label="电话" ></el-table-column>
-      <el-table-column label="操作"  width="200" align="center">
-        <template slot-scope="scope">
-          <el-button type="success" @click="handleEdit(scope.row)">编辑 <i class="el-icon-edit"></i></el-button>
-          <el-popconfirm
-              class="ml-5"
-              confirm-button-text='确定'
-              cancel-button-text='取消'
-              icon="el-icon-info"
-              icon-color="red"
-              title="您确定删除吗？"
-              @confirm="del(scope.row.id)">
-            <el-button type="danger" slot="reference">删除 <i class="el-icon-remove-outline"></i></el-button>
-          </el-popconfirm>
-        </template>
-      </el-table-column>
-    </el-table>
+    <!-- 操作按钮组 -->
+    <el-card class="operation-card" shadow="hover">
+      <div class="operation-btns">
+        <el-button 
+          type="primary" 
+          @click="handleAdd"
+          class="animated-btn"
+          icon="el-icon-circle-plus-outline">
+          新增
+        </el-button>
+        
+        <el-popconfirm
+          @confirm="delBatch"
+          title="您确定批量删除这些数据吗？">
+          <template #reference>
+            <el-button 
+              type="danger"
+              class="animated-btn"
+              icon="el-icon-remove-outline">
+              批量删除
+            </el-button>
+          </template>
+        </el-popconfirm>
 
-    <div style="padding: 10px 0">
-      <el-pagination
+        <el-upload 
+          action="http://localhost:8081/student/import"
+          :show-file-list="false"
+          :headers="uploadHeaders"
+          class="ml-5">
+          <el-button 
+            type="info"
+            class="animated-btn"
+            icon="el-icon-bottom">
+            导入
+          </el-button>
+        </el-upload>
+
+        <el-button 
+          type="info" 
+          @click="exp"
+          class="ml-5 animated-btn"
+          icon="el-icon-top">
+          导出
+        </el-button>
+      </div>
+    </el-card>
+
+    <!-- 数据表格 -->
+    <el-card class="table-card" shadow="never">
+      <el-table 
+        :data="tableData"
+        border 
+        stripe
+        highlight-current-row
+        class="animated-table"
+        :header-cell-class-name="'table-header'"
+        @selection-change="handleSelectionChange">
+        <el-table-column type="selection" width="150" align="center"></el-table-column>
+        <el-table-column prop="grade" label="年级" width="200" align="center"></el-table-column>
+        <el-table-column prop="college" label="学院" width="380"></el-table-column>
+        <el-table-column prop="className" label="班级" width="280"></el-table-column>
+        <el-table-column prop="studentNo" label="学号" width="160"></el-table-column>
+        <el-table-column prop="studentName" label="姓名" width="120"></el-table-column>
+        <el-table-column prop="telephone" label="电话" width="150"></el-table-column>
+        
+        <el-table-column label="操作" width="220" align="center">
+          <template slot-scope="scope">
+            <el-tooltip content="编辑" placement="top">
+              <el-button 
+                type="success" 
+                @click="handleEdit(scope.row)"
+                icon="el-icon-edit"
+                circle
+                class="operation-icon">
+              </el-button>
+            </el-tooltip>
+            
+            <el-popconfirm
+              @confirm="del(scope.row.id)"
+              title="您确定删除吗？">
+              <template #reference>
+                <el-tooltip content="删除" placement="top">
+                  <el-button 
+                    type="danger"
+                    icon="el-icon-delete"
+                    circle
+                    class="operation-icon">
+                  </el-button>
+                </el-tooltip>
+              </template>
+            </el-popconfirm>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <!-- 分页 -->
+      <div class="pagination-container">
+        <el-pagination
+          background
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
           :current-page="pageNum"
@@ -78,53 +198,100 @@
           :page-size="pageSize"
           layout="total, sizes, prev, pager, next, jumper"
           :total="total">
-      </el-pagination>
-    </div>
+        </el-pagination>
+      </div>
+    </el-card>
 
-    <el-dialog title="学生信息" :visible.sync="dialogFormVisible" width="30%" >
-      <el-form label-width="80px" size="small">
-        <el-form-item label="年级">
-          <el-select clearable v-model="form.gradeNo" placeholder="请选择" style="width: 100%" @change="handleSelectChange">
-            <el-option v-for="item in grades" :key="item.name" :label="item.name" :value="item.value">
-              {{ item.name }}
+    <!-- 弹窗 -->
+    <el-dialog 
+      :title="form.id ? '编辑学生' : '新增学生'"
+      :visible.sync="dialogFormVisible"
+      width="500px"
+      center
+      custom-class="custom-dialog">
+      <el-form 
+        label-width="100px" 
+        size="medium"
+        class="dialog-form">
+        <el-form-item label="年级" prop="gradeNo">
+          <el-select 
+            v-model="form.gradeNo"
+            placeholder="请选择年级"
+            class="full-width">
+            <el-option 
+              v-for="item in grades"
+              :key="item.value"
+              :label="item.name"
+              :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
 
-        <el-form-item label="学院" v-if="isAdministrator">
-          <el-select clearable v-model="form.collegeNo" placeholder="请选择" style="width: 100%"  @change="handleSelectChange">
-            <el-option v-for="item in colleges" :key="item.name" :label="item.name" :value="item.value">
-              {{ item.name }}
+        <el-form-item label="学院" prop="collegeNo" v-if="isAdministrator">
+          <el-select 
+            v-model="form.collegeNo"
+            placeholder="请选择学院"
+            class="full-width">
+            <el-option 
+              v-for="item in colleges"
+              :key="item.value"
+              :label="item.name"
+              :value="item.value">
             </el-option>
           </el-select>
         </el-form-item>
 
-        <el-form-item label="班级">
-          <el-select clearable v-model="form.classNo" placeholder="请选择" style="width: 100%" @change="handleClassSelectChange">
-            <el-option v-for="item in formClassInfos" :key="item.className" :label="item.className" :value="item.classNo">
-              {{ item.className }}
+        <el-form-item label="班级" prop="classNo">
+          <el-select 
+            v-model="form.classNo"
+            placeholder="请选择班级"
+            class="full-width">
+            <el-option 
+              v-for="item in formClassInfos"
+              :key="item.classNo"
+              :label="item.className"
+              :value="item.classNo">
             </el-option>
           </el-select>
         </el-form-item>
 
         <el-form-item label="学号">
-          <el-input v-model="form.studentNo"  disabled autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="姓名">
-          <el-input v-model="form.studentName" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="电话号码">
-          <el-input v-model="form.telephone" autocomplete="off"></el-input>
+          <el-input 
+            v-model="form.studentNo"
+            placeholder="自动生成"
+            disabled>
+          </el-input>
         </el-form-item>
 
+        <el-form-item label="姓名" prop="studentName">
+          <el-input 
+            v-model="form.studentName"
+            placeholder="请输入姓名">
+          </el-input>
+        </el-form-item>
+
+        <el-form-item label="电话号码" prop="telephone">
+          <el-input 
+            v-model="form.telephone"
+            placeholder="请输入电话号码">
+            <template #prefix>
+              <i class="el-icon-phone"></i>
+            </template>
+          </el-input>
+        </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="dialogFormVisible = false">取 消</el-button>
-        <el-button type="primary" @click="save">确 定</el-button>
-      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="dialogFormVisible = false" class="cancel-btn">取消</el-button>
+          <el-button type="primary" @click="save" class="confirm-btn">确定</el-button>
+        </div>
+      </template>
     </el-dialog>
   </div>
 </template>
+
+
 
 <script>
 import axios from "axios";
@@ -466,8 +633,138 @@ export default {
 }
 </script>
 
-<style>
-.headerBg {
-  background: #eee!important;
+<style scoped>
+.container {
+  padding: 20px;
+  background: #f5f7fa;
+}
+
+/* 筛选卡片样式 */
+.filter-card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #f6f6f6);
+}
+
+.filter-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.animated-select {
+  transition: all 0.3s ease;
+}
+
+.animated-select:hover {
+  transform: translateY(-2px);
+}
+
+.search-btn {
+  background: linear-gradient(45deg, #409EFF, #66b1ff);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.reset-btn {
+  background: linear-gradient(45deg, #909399, #a6a9ad);
+  border: none;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+/* 操作按钮组 */
+.operation-card {
+  margin-bottom: 20px;
+  border-radius: 12px;
+}
+
+.operation-btns {
+  display: flex;
+  gap: 15px;
+}
+
+.animated-btn {
+  transition: all 0.3s ease;
+  border-radius: 8px;
+  padding: 12px 24px;
+}
+
+.animated-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+/* 表格样式 */
+.table-card {
+  border-radius: 12px;
+}
+
+.animated-table {
+  transition: all 0.3s ease;
+}
+
+.animated-table:hover {
+  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+}
+
+.table-header {
+  background: linear-gradient(45deg, #f8f9fa, #f1f3f5) !important;
+  font-weight: 600;
+  color: #606266;
+}
+
+.operation-icon {
+  transition: all 0.3s ease;
+}
+
+.operation-icon:hover {
+  transform: scale(1.1);
+}
+
+/* 分页样式 */
+.pagination-container {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* 弹窗样式 */
+.custom-dialog {
+  border-radius: 12px;
+}
+
+.dialog-form {
+  padding: 20px 40px;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.cancel-btn {
+  background: #f0f2f5;
+  border: none;
+  padding: 12px 28px;
+}
+
+.confirm-btn {
+  background: linear-gradient(45deg, #409EFF, #66b1ff);
+  border: none;
+  padding: 12px 28px;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .filter-container {
+    flex-direction: column;
+  }
+  
+  .ml-5 {
+    margin-left: 0 !important;
+    margin-top: 10px;
+  }
 }
 </style>
+

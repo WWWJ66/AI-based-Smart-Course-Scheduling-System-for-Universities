@@ -1,57 +1,112 @@
 <template>
-  <div>
-    <el-row :span="10" style="margin-bottom: 30px">
-      <el-col :span="6">
-        <el-card style="color:#409EFF">
-            <div ><i class="el-icon-user"></i>学生总数</div>
-          <div style="padding: 10px 0;text-align: center;font-weight: bold">{{ value[0]}}</div>
+  <div class="dashboard-container">
+    <!-- 数据指标卡片 -->
+    <el-row :gutter="24" class="metric-row">
+      <el-col :xs="24" :sm="12" :md="6" class="metric-col">
+        <el-card class="metric-card student-card" shadow="hover">
+          <div class="metric-content">
+            <div class="metric-icon">
+              <i class="el-icon-user"></i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">学生总数</div>
+              <div class="metric-value">{{ value[0] }}</div>
+            </div>
+          </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
-        <el-card  style="color:#67C23A">
-          <div><i class="el-icon-user-solid"></i>教师总数</div>
-          <div style="padding: 10px 0;text-align: center;font-weight: bold">{{ value[1]}}</div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card  style="color:#303133">
-          <div><i class="el-icon-s-promotion"></i>班级总数</div>
-          <div style="padding: 10px 0;text-align: center;font-weight: bold">{{ value[2]}}</div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card style="color:#909399">
-          <div ><i class="el-icon-s-order"></i>课程总数</div>
-          <div style="padding: 10px 0;text-align: center;font-weight: bold">{{ value[3]}}</div>
+      
+      <el-col :xs="24" :sm="12" :md="6" class="metric-col">
+        <el-card class="metric-card teacher-card" shadow="hover">
+          <div class="metric-content">
+            <div class="metric-icon">
+              <i class="el-icon-user-solid"></i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">教师总数</div>
+              <div class="metric-value">{{ value[1] }}</div>
+            </div>
+          </div>
         </el-card>
       </el-col>
 
+      <el-col :xs="24" :sm="12" :md="6" class="metric-col">
+        <el-card class="metric-card class-card" shadow="hover">
+          <div class="metric-content">
+            <div class="metric-icon">
+              <i class="el-icon-s-promotion"></i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">班级总数</div>
+              <div class="metric-value">{{ value[2] }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
+
+      <el-col :xs="24" :sm="12" :md="6" class="metric-col">
+        <el-card class="metric-card course-card" shadow="hover">
+          <div class="metric-content">
+            <div class="metric-icon">
+              <i class="el-icon-s-order"></i>
+            </div>
+            <div class="metric-info">
+              <div class="metric-label">课程总数</div>
+              <div class="metric-value">{{ value[3] }}</div>
+            </div>
+          </div>
+        </el-card>
+      </el-col>
     </el-row>
 
-    <el-row>
-      <el-col :span="10">
-          <div ref="pieChart" style="height:600px; margin-top: 40px"></div>
+    <!-- 图表区域 -->
+    <el-row :gutter="24" class="chart-row">
+      <el-col :xs="24" :md="10" class="chart-col">
+        <el-card class="chart-card" shadow="never">
+          <div ref="pieChart" class="chart-container"></div>
+        </el-card>
       </el-col>
 
-      <el-col :span="14">
-        <div style="text-align: center; margin-bottom: 10px">
-        <el-select clearable style="width: 200px" v-model="term" class="ml-5" placeholder="请选择学期"  @change="handleSelectChange">
-          <el-option  v-for="item in terms" :key="item.name" :label="item.name" :value="item.value">
-            {{ item.name }}
-          </el-option>
-        </el-select>
-          <el-select clearable style="width: 200px" v-model="grade" class="ml-5" placeholder="请选择年级"  @change="handleSelectChange">
-            <el-option v-for="item in grades" :key="item.name" :label="item.name" :value="item.value" >
-              {{ item.name }}
-            </el-option>
-          </el-select>
-        </div>
-        <div ref="barChart" style="height:600px;"></div>
+      <el-col :xs="24" :md="14" class="chart-col">
+        <el-card class="chart-card" shadow="never">
+          <div class="filter-group">
+            <el-select
+              v-model="term"
+              class="styled-select"
+              placeholder="请选择学期"
+              clearable
+              @change="handleSelectChange"
+            >
+              <el-option
+                v-for="item in terms"
+                :key="item.name"
+                :label="item.name"
+                :value="item.value"
+              />
+            </el-select>
+
+            <el-select
+              v-model="grade"
+              class="styled-select"
+              placeholder="请选择年级"
+              clearable
+              @change="handleSelectChange"
+            >
+              <el-option
+                v-for="item in grades"
+                :key="item.name"
+                :label="item.name"
+                :value="item.value"
+              />
+            </el-select>
+          </div>
+          <div ref="barChart" class="chart-container"></div>
+        </el-card>
       </el-col>
     </el-row>
-
   </div>
 </template>
+
 
 <script>
 import * as echarts from 'echarts';
@@ -252,5 +307,148 @@ export default {
 
 </script>
 <style scoped>
+.dashboard-container {
+  padding: 24px;
+  background: #f5f7fa;
+}
 
+/* 指标卡片样式 */
+.metric-row {
+  margin-bottom: 24px;
+}
+
+.metric-col {
+  margin-bottom: 16px;
+  padding: 0 12px;
+}
+
+.metric-card {
+  border-radius: 12px;
+  border: none;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.metric-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.metric-content {
+  display: flex;
+  align-items: center;
+  padding: 20px;
+}
+
+.metric-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  flex-shrink: 0;
+}
+
+.metric-icon i {
+  font-size: 28px;
+  color: white;
+}
+
+.student-card .metric-icon { background: linear-gradient(45deg, #409EFF, #5ab1ff); }
+.teacher-card .metric-icon { background: linear-gradient(45deg, #67C23A, #85ce61); }
+.class-card .metric-icon { background: linear-gradient(45deg, #303133, #606266); }
+.course-card .metric-icon { background: linear-gradient(45deg, #909399, #a6a9ad); }
+
+.metric-label {
+  color: #909399;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.metric-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #303133;
+  line-height: 1;
+}
+
+/* 图表区域样式 */
+.chart-row {
+  margin-top: 24px;
+}
+
+.chart-col {
+  margin-bottom: 24px;
+}
+
+.chart-card {
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05) !important;
+}
+
+.chart-container {
+  height: 600px;
+  margin-top: 20px;
+}
+
+.filter-group {
+  display: flex;
+  gap: 16px;
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.styled-select {
+  width: 240px;
+  border-radius: 8px;
+}
+
+/* 响应式设计 */
+@media (max-width: 992px) {
+  .metric-content {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .metric-icon {
+    margin-right: 0;
+    margin-bottom: 15px;
+  }
+  
+  .filter-group {
+    flex-direction: column;
+  }
+  
+  .styled-select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .metric-value {
+    font-size: 24px;
+  }
+  
+  .chart-container {
+    height: 400px;
+  }
+}
+
+/* 动画效果 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.metric-card {
+  animation: scaleIn 0.6s ease;
+}
 </style>

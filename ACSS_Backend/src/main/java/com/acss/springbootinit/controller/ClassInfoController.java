@@ -1,3 +1,7 @@
+/**
+ * @ClassName ClassInfoController
+ * @Description [处理班级信息有关的请求]
+ */
 package com.acss.springbootinit.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
@@ -26,7 +30,12 @@ public class ClassInfoController {
     @Resource
     private IUserService userService;
 
-    //新增或者更新
+    /**
+     * 保存班级信息
+     *
+     * @param classInfo 请求体，包含班级id、学院编号、年级编号等信息
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping
     public Result save(@RequestBody ClassInfo classInfo) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -45,7 +54,12 @@ public class ClassInfoController {
         }
     }
 
-    //删除
+    /**
+     * 删除班级
+     *
+     * @param id 班级id
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Integer id) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -65,6 +79,12 @@ public class ClassInfoController {
         }
     }
 
+    /**
+     * 批量删除班级
+     *
+     * @param ids 班级id列表
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping("/del/batch")
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -88,6 +108,15 @@ public class ClassInfoController {
         }
     }
 
+    /**
+     * 分页查询班级
+     *
+     * @param pageNum 页数
+     * @param pageSize 每页个数
+     * @param college 学院名称
+     * @param className 班级名称
+     * @return 返回分页查询结果
+     */
     @GetMapping("/page")
     public Result findPage(@RequestParam Integer pageNum, @RequestParam Integer pageSize,
                            @RequestParam(defaultValue = "") String college,
@@ -114,12 +143,23 @@ public class ClassInfoController {
         return Result.success(classInfoService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
 
+    /**
+     * 查询所有班级
+     *
+     * @return 所有班级列表
+     */
     @GetMapping
     public Result findAll() {
         return Result.success(classInfoService.list());
     }
 
-    //通过年级查询班级
+
+    /**
+     * 通过年级查询班级
+     *
+     * @param grade 年级
+     * @return 该年级班级列表
+     */
     @GetMapping("/grade/{grade}")
     public Result selectByGrade(@PathVariable String grade) {
         QueryWrapper<ClassInfo> queryWrapper = new QueryWrapper<>();
@@ -127,7 +167,12 @@ public class ClassInfoController {
         return Result.success(classInfoService.list(queryWrapper));
     }
 
-    //通过学院查询班级
+    /**
+     * 通过学院查询班级
+     *
+     * @param college 学院
+     * @return 该学院班级列表
+     */
     @GetMapping("/college/{college}")
     public Result selectByCollege(@PathVariable String college) {
         QueryWrapper<ClassInfo> queryWrapper = new QueryWrapper<>();
@@ -136,7 +181,13 @@ public class ClassInfoController {
     }
 
 
-    //通过年级和学院查询班级
+    /**
+     * 通过年级和学院查询班级
+     *
+     * @param grade 年级
+     * @param college 学院
+     * @return 符合条件的班级列表
+     */
     @GetMapping("/gradeAndCollege")
     public Result gradeAndCollege(@RequestParam String grade, @RequestParam String college) {
         QueryWrapper<ClassInfo> queryWrapper = new QueryWrapper<>();
@@ -145,7 +196,12 @@ public class ClassInfoController {
         return Result.success(classInfoService.list(queryWrapper));
     }
 
-    //生成班级编号
+    /**
+     * 生成班级编号
+     *
+     * @param requestData 请求数据，包含年级、学院、专业
+     * @return 班级编号
+     */
     @PostMapping("/generateClassNo")
     public Result generateSClassNo(@RequestBody Map<String, Object> requestData) {
         // 获取 form 中的参数

@@ -1,23 +1,39 @@
 <template>
-  <div style="color: #666">
-    <div style="margin: 20px 0; ">
-      <div class="pd-10" style="font-size: 20px; color: #3F5EFB; cursor: pointer">{{ notification.title }}</div>
-      <div style="font-size: 14px; margin-top: 10px">
-        <i class="el-icon-user-solid"></i> <span>{{ userName }}</span>
-        <i class="el-icon-time" style="margin-left: 10px"></i> <span>{{ notification.time }}</span>
+  <div class="detail-container">
+    <!-- 标题区 -->
+    <el-card shadow="never" class="header-card">
+      <div class="header-content">
+        <h1 class="title-gradient">{{ notification.title }}</h1>
+        <div class="meta-wrapper">
+          <div class="meta-group">
+            <div class="meta-item">
+              <i class="el-icon-user-solid icon-highlight"></i>
+              <span class="meta-text">{{ userName }}</span>
+            </div>
+            <div class="meta-item">
+              <i class="el-icon-time icon-highlight"></i>
+              <span class="meta-text">{{ notification.time }}</span>
+            </div>
+          </div>
+        </div>
       </div>
-    </div>
-    <div style="margin: 20px 0">
-      <mavon-editor
-          class="md"
+    </el-card>
+
+    <!-- 内容区 -->
+    <el-card shadow="never" class="content-card">
+      <div class="editor-wrapper">
+        <mavon-editor
+          class="styled-editor"
           :value="notification.content"
           :subfield="false"
           :defaultOpen="'preview'"
           :toolbarsFlag="false"
           :editable="false"
           :scrollStyle="true"
-          :ishljs="true"/>
-    </div>
+          :ishljs="true"
+        />
+      </div>
+    </el-card>
   </div>
 </template>
 
@@ -73,5 +89,147 @@ export default {
 </script>
 
 <style scoped>
+.detail-container {
+  background: #f5f7fa;
+  padding: 24px;
+  min-height: 100vh;
+}
 
+/* 头部卡片样式 */
+.header-card {
+  border-radius: 12px;
+  margin-bottom: 24px;
+  background: linear-gradient(145deg, #ffffff, #f8f9fe);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+  border: none;
+}
+
+.header-content {
+  padding: 20px;
+}
+
+.title-gradient {
+  font-size: 28px;
+  margin: 0 0 20px 0;
+  background: linear-gradient(45deg, #3F5EFB, #6397ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.title-gradient:hover {
+  transform: translateX(5px);
+}
+
+/* 元信息样式 */
+.meta-wrapper {
+  border-top: 1px dashed #eee;
+  padding-top: 16px;
+}
+
+.meta-group {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-highlight {
+  color: #409eff;
+  font-size: 18px;
+  vertical-align: middle;
+}
+
+.meta-text {
+  color: #606266;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 内容区样式 */
+.content-card {
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.04);
+}
+
+.editor-wrapper {
+  padding: 20px;
+  min-height: 600px;
+}
+
+/* 自定义编辑器样式 */
+.styled-editor {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+}
+
+.styled-editor ::v-deep .v-note-wrapper {
+  border: none !important;
+  background: #fafbff;
+}
+
+.styled-editor ::v-deep .v-show-content {
+  background: #ffffff !important;
+  padding: 30px 40px !important;
+}
+
+.styled-editor ::v-deep code {
+  background: #f3f4ff !important;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.styled-editor ::v-deep pre code {
+  background: #f8f9fe !important;
+  padding: 15px !important;
+  border-radius: 8px !important;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .detail-container {
+    padding: 15px;
+  }
+  
+  .title-gradient {
+    font-size: 22px;
+  }
+  
+  .meta-group {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .editor-wrapper {
+    padding: 10px;
+  }
+  
+  .styled-editor ::v-deep .v-show-content {
+    padding: 20px 15px !important;
+  }
+}
+
+@keyframes contentAppear {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.styled-editor {
+  animation: contentAppear 0.6s ease;
+}
 </style>

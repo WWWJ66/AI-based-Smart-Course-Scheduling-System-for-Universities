@@ -1,3 +1,7 @@
+/**
+ * @ClassName CourseInfoController
+ * @Description [处理课程信息有关的请求]
+ */
 package com.acss.springbootinit.controller;
 
 
@@ -40,7 +44,12 @@ public class CourseInfoController {
     @Resource
     private IUserService userService;
 
-    //新增或者更新
+    /**
+     * 保存班级信息
+     *
+     * @param courseInfo 请求体，包含课程id、开课学院、课程编号等信息
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping
     public Result save(@RequestBody CourseInfo courseInfo) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -56,7 +65,12 @@ public class CourseInfoController {
         }
     }
 
-    //删除
+    /**
+     * 删除课程
+     *
+     * @param id 课程id
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Integer id) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -76,7 +90,12 @@ public class CourseInfoController {
         }
     }
 
-
+    /**
+     * 批量删除课程
+     *
+     * @param ids 课程id列表
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping("/del/batch")
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -100,6 +119,15 @@ public class CourseInfoController {
         }
     }
 
+    /**
+     * 分页查询课程
+     *
+     * @param pageNum 页数
+     * @param pageSize 每页个数
+     * @param college 学院名称
+     * @param courseName 课程名称
+     * @return 返回分页查询结果
+     */
     @GetMapping("/page")
     public Result findPage(@RequestParam Integer pageNum, @RequestParam Integer pageSize,
                            @RequestParam(defaultValue = "") String college,
@@ -131,13 +159,22 @@ public class CourseInfoController {
         return Result.success(courseInfoService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
 
-    //查询课程和教师信息，为课程计划的数据输入提供便利
+    /**
+     * 查询课程信息
+     *
+     * @return 详细信息
+     */
     @GetMapping("/course")
     public Result findCourse() {
         return Result.success(courseInfoService.findCourse());
     }
 
-    //生成课程编号
+    /**
+     * 生成课程编号
+     *
+     * @param requestData 请求数据，包含学院、课程
+     * @return 所有班级列表
+     */
     @PostMapping("/generateCourseNo")
     public Result generateCourseNo(@RequestBody Map<String, Object> requestData) {
         String college = String.valueOf(requestData.get("college"));
@@ -149,7 +186,12 @@ public class CourseInfoController {
         return Result.success("课程编号生成成功！",courseNo);
     }
 
-    //数据导出
+    /**
+     * 导出数据
+     *
+     * @param college 学院
+     * @param courseAttribute 课程属性
+     */
     @GetMapping("/export")
     public void export(HttpServletResponse response,
                        @RequestParam(defaultValue = "") String college,
@@ -192,6 +234,11 @@ public class CourseInfoController {
         return URLEncoder.encode(fileName, "UTF-8");
     }
 
+    /**
+     * 导入数据
+     *
+     * @param file 文件
+     */
     @RequestMapping("/import")
     @ResponseBody
     public Result importExcel(MultipartFile file) {

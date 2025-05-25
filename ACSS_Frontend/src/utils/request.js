@@ -1,7 +1,7 @@
 import axios from 'axios'
 import ElementUI from 'element-ui'
 const request = axios.create({
-    baseURL: 'http://localhost:8101/api',
+    baseURL: 'http://47.98.170.44:8080/api',
     timeout: 10000    //10s超时
 })
 

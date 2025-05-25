@@ -1,65 +1,146 @@
 <template>
-  <div style="margin: 10px 0">
-    <div style="margin: 10px 0">
-      <el-select style="width: 200px" v-model="role" placeholder="请选择角色">
-        <el-option v-for="item in roles" :key="item.name" :label="item.name" :value="item.value">
-          {{ item.name }}
-        </el-option>
+  <div class="user-role-container">
+    <!-- 筛选区 -->
+    <div class="filter-bar">
+      <el-select class="filter-item" v-model="role" placeholder="请选择角色" clearable>
+        <el-option
+          v-for="item in roles"
+          :key="item.name"
+          :label="item.name"
+          :value="item.value"
+        />
       </el-select>
 
-      <el-input style="width: 200px" placeholder="请输入用户账号" suffix-icon="el-icon-search" class="ml-5" v-model="userNo"></el-input>
+      <el-input
+        class="filter-item"
+        placeholder="请输入用户账号"
+        suffix-icon="el-icon-search"
+        v-model="userNo"
+        clearable
+      />
 
-      <el-button class="ml-5" type="primary" @click="load">搜索</el-button>
-      <el-button type="warning" @click="reset">重置</el-button>
-  </div>
+      <el-button class="animated-btn filter-item" type="primary" @click="load">搜索</el-button>
+      <el-button class="animated-btn" type="warning" @click="reset">重置</el-button>
+    </div>
 
-    <el-table :data="tableData" border stripe :header-cell-class-name="'headerBg'">
-      <el-table-column prop="id" label="ID" width="80"></el-table-column>
-      <el-table-column  prop="userNo" label=账号  width="150"></el-table-column>
-      <el-table-column  prop="username" label="用户名"  width="100"></el-table-column>
+    <!-- 表格 -->
+    <el-table
+      class="user-role-table"
+      :data="tableData"
+      border
+      stripe
+      :header-cell-class-name="'headerBg'"
+    >
+      <el-table-column prop="id" label="ID" width="180" />
+      <el-table-column prop="userNo" label="账号" width="350" />
+      <el-table-column prop="username" label="用户名" width="200" />
 
-      <el-table-column label="用户头像" width="100" align="center">
+      <el-table-column label="用户头像" width="200" align="center">
         <template slot-scope="scope">
-          <img :src="scope.row.avatarUrl" alt="Avatar" style="width: 50px; height: 50px; border-radius: 50%;">
+          <img
+            :src="scope.row.avatarUrl"
+            alt="Avatar"
+            class="avatar-img"
+          />
         </template>
       </el-table-column>
 
-      <el-table-column prop="role" label="用户角色" width="220" align="center">
+      <el-table-column prop="role" label="用户角色" width="520" align="center">
         <template slot-scope="scope">
-            <el-dropdown trigger="click" style="font-size: 0.85em;">
-              <el-button type="primary" icon="el-icon-user" class="c-btn">
-                {{ getLabel(roles, scope.row.role, 'value', 'name') || '选择角色' }} <i class="el-icon-arrow-down el-icon--right"></i>
-              </el-button>
-              <el-dropdown-menu slot="dropdown">
-									<span v-for="role in roles" :key="role.value" @click="changeUserRole(scope.row.id,role.value)">
-										<el-dropdown-item>{{role.name}}</el-dropdown-item>
-									</span>
-              </el-dropdown-menu>
-            </el-dropdown>
-
+          <el-dropdown trigger="click">
+            <el-button type="primary" icon="el-icon-user" class="animated-btn small-btn">
+              {{ getLabel(roles, scope.row.role, 'value', 'name') || '选择角色' }}
+              <i class="el-icon-arrow-down el-icon--right" />
+            </el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item
+                v-for="r in roles"
+                :key="r.value"
+                @click.native="changeUserRole(scope.row.id, r.value)"
+              >
+                {{ r.name }}
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
         </template>
       </el-table-column>
 
-      <el-table-column label="重置密码" width="150" align="center">
+      <el-table-column label="重置密码" width="250" align="center">
         <template slot-scope="scope">
-          <el-button type="danger" @click="resetPassword(scope.row.id)">重置密码</el-button>
+          <el-button class="animated-btn" type="danger" size="mini" @click="resetPassword(scope.row.id)">
+            重置密码
+          </el-button>
         </template>
       </el-table-column>
-
     </el-table>
-    <div style="padding: 10px 0">
+
+    <!-- 分页 -->
+    <div class="pagination-bar">
       <el-pagination
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :current-page="pageNum"
-          :page-sizes="[5, 10, 20, 50]"
-          :page-size="pageSize"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total">
-      </el-pagination>
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="pageNum"
+        :page-sizes="[5, 10, 20, 50]"
+        :page-size="pageSize"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      />
     </div>
   </div>
 </template>
+
+<style scoped>
+.user-role-container {
+  padding: 20px;
+  background-color: #f9fbfd;
+}
+
+.filter-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+.filter-item {
+  width: 200px;
+}
+
+.animated-btn {
+  transition: all 0.3s ease;
+  border-radius: 6px;
+}
+
+.animated-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+}
+
+.small-btn {
+  font-size: 13px;
+  padding: 6px 12px;
+}
+
+.avatar-img {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #eee;
+}
+
+.user-role-table >>> .el-table__row:hover {
+  background-color: #f0f9ff !important;
+}
+
+.pagination-bar {
+  padding: 15px 0;
+  display: flex;
+  justify-content: center;
+}
+</style>
+
 
 <script>
 export default {
@@ -160,8 +241,3 @@ export default {
 }
 
 </script>
-<style>
-.headerBg {
-  background: #eee!important;
-}
-</style>

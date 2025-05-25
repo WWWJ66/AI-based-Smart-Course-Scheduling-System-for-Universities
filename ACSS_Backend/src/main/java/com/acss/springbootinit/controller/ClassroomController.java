@@ -1,3 +1,7 @@
+/**
+ * @ClassName ClassroomController
+ * @Description [处理教室信息有关的请求]
+ */
 package com.acss.springbootinit.controller;
 
 
@@ -22,14 +26,24 @@ public class ClassroomController {
     @Resource
     private IClassroomService classroomService;
 
-    //新增或者更新
+    /**
+     * 保存教室信息
+     *
+     * @param classroom 请求体，包含教室id、教室编号、教学楼编号等信息
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping
     public Result save(@RequestBody Classroom classroom) {
         classroomService.saveOrUpdate(classroom);
         return Result.success();
     }
 
-    //删除
+    /**
+     * 删除教室信息
+     *
+     * @param id 教室id
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @DeleteMapping("/{id}")
 
     public Result delete(@PathVariable Integer id) {
@@ -37,12 +51,27 @@ public class ClassroomController {
         return Result.success();
     }
 
+    /**
+     * 批量教室信息
+     *
+     * @param ids 教室id列表
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping("/del/batch")
     public Result deleteBatch(@RequestBody List<Integer> ids) {//批量删除
         classroomService.removeByIds(ids);
         return Result.success();
     }
 
+    /**
+     * 分页查询教室
+     *
+     * @param pageNum 页数
+     * @param pageSize 每页个数
+     * @param teachingBuilding 教学楼名称
+     * @param classroomType 教室类型
+     * @return 返回分页查询结果
+     */
     @GetMapping("/page")
     public Result findPage(@RequestParam Integer pageNum, @RequestParam Integer pageSize,
                            @RequestParam(defaultValue = "") String teachingBuilding,
@@ -60,7 +89,12 @@ public class ClassroomController {
         return Result.success(classroomService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
 
-    //生成教室编号
+    /**
+     * 生成教室编号
+     *
+     * @param requestData 请求数据，包含教学楼、教室类型
+     * @return 教室编号
+     */
     @PostMapping("/generateClassroomNo")
     public Result generateStudentNo(@RequestBody Map<String, Object> requestData) {
         // 获取 form 中的参数

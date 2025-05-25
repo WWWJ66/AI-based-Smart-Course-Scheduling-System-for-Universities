@@ -1,104 +1,79 @@
 <template>
-  <div>
-    <div style="margin: 10px 0">
-      <el-select style="width: 200px" v-model="term" class="ml-5" placeholder="请选择学期">
-        <el-option v-for="item in terms" :key="item.name" :label="item.name" :value="item.value">
-          {{ item.name }}
-        </el-option>
-      </el-select>
+  <div class="page-container">
+    <el-card shadow="hover" class="card-container">
+      <el-space wrap size="large">
+        <el-select v-model="term" placeholder="请选择学期" style="width: 200px">
+          <el-option v-for="item in terms" :key="item.name" :label="item.name" :value="item.value" />
+        </el-select>
 
-      <el-select style="width: 200px" v-model="college" class="ml-5" placeholder="请选择学院" v-if="isAdministrator" @change="handleSelectChange">
-        <el-option v-for="item in colleges" :key="item.name" :label="item.name" :value="item.value">
-          {{ item.name }}
-        </el-option>
-      </el-select>
+        <el-select v-if="isAdministrator" v-model="college" placeholder="请选择学院" style="width: 200px" @change="handleSelectChange">
+          <el-option v-for="item in colleges" :key="item.name" :label="item.name" :value="item.value" />
+        </el-select>
 
-      <el-select style="width: 200px" v-model="grade" class="ml-5" placeholder="请选择年级"  v-if="isAdministrator||isAdmin" @change="handleSelectChange">
-        <el-option v-for="item in grades" :key="item.name" :label="item.name" :value="item.value" >
-          {{ item.name }}
-        </el-option>
-      </el-select>
+        <el-select v-if="isAdministrator || isAdmin" v-model="grade" placeholder="请选择年级" style="width: 200px" @change="handleSelectChange">
+          <el-option v-for="item in grades" :key="item.name" :label="item.name" :value="item.value" />
+        </el-select>
 
-      <el-select style="width: 200px" v-model="classNo" class="ml-5" placeholder="请选择班级" v-if="isAdministrator||isAdmin">
-        <el-option v-for="item in classInfos" :key="item.className" :label="item.className" :value="item.classNo">
-          {{ item.className }}
-        </el-option>
-      </el-select>
+        <el-select v-if="isAdministrator || isAdmin" v-model="classNo" placeholder="请选择班级" style="width: 200px">
+          <el-option v-for="item in classInfos" :key="item.className" :label="item.className" :value="item.classNo" />
+        </el-select>
 
-      <el-button class="ml-5" type="primary" @click="querySchedule">查询课表</el-button>
-      <el-button type="warning" @click="reset">重置</el-button>
-      <el-button type="info" v-if="isAdministrator||isAdmin" @click="editSchedule">微调课表</el-button>
-    </div>
+        <el-button type="primary" icon="el-icon-search" @click="querySchedule">查询课表</el-button>
+        <el-button type="warning" icon="el-icon-refresh" @click="reset">重置</el-button>
+        <el-button v-if="isAdministrator || isAdmin" type="info" icon="el-icon-edit" @click="editSchedule">微调课表</el-button>
+      </el-space>
+    </el-card>
 
-    <div class="table-wrapper">
-      <div class="tabel-container">
-        <table>
-          <!--表头-->
+    <el-card shadow="hover" class="table-wrapper" style="margin-top: 20px">
+      <div class="table-container">
+        <table class="schedule-table">
           <thead>
-          <tr>
-            <th>时间</th>
-            <th
-                v-for="(weekNum, weekIndex) in courseTableData.courses.length"
-                :key="weekIndex">
-              <!-- 第一行渲染-->
-              {{ "周" + digitalToChinese(weekIndex + 1, "week") }}
-            </th>
-          </tr>
+            <tr>
+              <th>时间</th>
+              <th v-for="(weekNum, weekIndex) in courseTableData.courses.length" :key="weekIndex">
+                {{ "周" + digitalToChinese(weekIndex + 1, "week") }}
+              </th>
+            </tr>
           </thead>
-          <!-- 表体 -->
           <tbody>
-          <!--五行-->
-          <tr
-              v-for="(lesson, lessonIndex) in courseTableData.lessons"
-              :key="lessonIndex">
-            <!--第一列-->
-            <td>
-              <p>{{ "第" + digitalToChinese(lessonIndex + 1) + "节" }}</p> <!--显示当前时间段是第几节课，通过digitalToChinese方法将课时数字转换为中文表示。-->
-              <p class="period">{{ lesson }}</p>
-            </td>
-            <!--五列-->
-            <td
-                v-for="(course, courseIndex) in courseTableData.courses"
-                :key="courseIndex">
-              {{ courseTableData.courses[courseIndex][lessonIndex] || "-" }}
-            </td>
-            <!-- v-for="(course, courseIndex) in courseTableData.courses": 使用v-for指令循环渲染五列，每一列代表一天的课程情况。
-            :key="courseIndex": 为每列设置唯一的键值，以便Vue能够正确地更新和跟踪每列的状态。
-            {{ courseTableData.courses[courseIndex][lessonIndex] || "-" }}: 显示具体的课程信息。如果某个时间段没有课程，则显示占位符“-”。
-            整个表格的结构是基于Vue.js的数据驱动，courseTableData 对象中包含了时间段信息(lessons)和具体的课程安排(courses)。该模板通过Vue的循环指令和数据绑定，动态地渲染出完整的课程表格。在表格中，每一行代表一个时间段，每一列代表一天，以及在第一列中显示当前时间段是第几节课的信息。-->
-          </tr>
+            <tr v-for="(lesson, lessonIndex) in courseTableData.lessons" :key="lessonIndex">
+              <td>
+                <p>{{ "第" + digitalToChinese(lessonIndex + 1) + "节" }}</p>
+                <p class="period">{{ lesson }}</p>
+              </td>
+              <td v-for="(course, courseIndex) in courseTableData.courses" :key="courseIndex">
+                {{ courseTableData.courses[courseIndex][lessonIndex] || "-" }}
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </el-card>
 
+    <!-- 微调课表对话框 -->
     <el-dialog title="课表微调" :visible.sync="dialogFormVisible" width="30%">
       <el-form label-width="80px" size="small">
         <el-form-item label="课程名称">
-          <el-select clearable v-model="form.id" placeholder="请选择" style="width: 100%"  @change="handleFormSelectChange">
+          <el-select clearable v-model="form.id" placeholder="请选择" style="width: 100%" @change="handleFormSelectChange">
             <el-option v-for="item in courseData" :key="item.id" :label="item.courseName" :value="item.id">
-              {{  `${item.courseName}  ${item.courseTime}`}}
+              {{ `${item.courseName}  ${item.courseTime}` }}
             </el-option>
           </el-select>
         </el-form-item>
 
         <el-form-item label="上课时间">
           <el-select clearable v-model="form.courseTime" placeholder="请选择" style="width: 100%">
-            <el-option v-for="item in courseTimeList" :value="item" :key="item">
-              {{ item }}
-            </el-option>
+            <el-option v-for="item in courseTimeList" :key="item" :label="item" :value="item" />
           </el-select>
         </el-form-item>
 
         <el-form-item label="上课教室">
-          <el-select v-model="form.classroomNo"  placeholder="请选择" style="width: 100%">
-          <el-option v-for="item in classroomList" :key="item.classroomNo" :label="item.classroomName" :value="item.classroomNo">
-            {{ item.classroomName }}
-          </el-option>
+          <el-select v-model="form.classroomNo" placeholder="请选择" style="width: 100%">
+            <el-option v-for="item in classroomList" :key="item.classroomNo" :label="item.classroomName" :value="item.classroomNo" />
           </el-select>
         </el-form-item>
-
       </el-form>
+
       <div slot="footer" class="dialog-footer">
         <el-button @click="dialogFormVisible = false">取 消</el-button>
         <el-button type="primary" @click="save">确 定</el-button>
@@ -106,6 +81,7 @@
     </el-dialog>
   </div>
 </template>
+
 
 <script>
 export default {
@@ -380,64 +356,47 @@ export default {
 </script>
 
 <style scoped>
-/* 表格容器样式 */
+.page-container {
+  padding: 20px;
+  background-color: #f5f7fa;
+  min-height: 100vh;
+}
+
+.card-container {
+  padding: 20px;
+}
+
 .table-wrapper {
-  margin-top: 20px;    /*设置容器与上方元素的上外边距为20像素。*/
-  overflow: auto;     /*当表格内容溢出容器时，显示滚动条。*/
-  max-height: 400px; /* 设置表格容器的最大高度为400像素*/
+  overflow-x: auto;
 }
 
-/* 表格样式 */
-.tabel-container table {
-  width: 100%;      /*使表格占据其容器的100%宽度。*/
-  border-collapse: collapse;    /*合并表格边框，使其看起来更紧凑。*/
-}
-
-/* 表头样式 */
-.tabel-container th {
-  background-color: #67a1ff;
-  color: #fff;
+.schedule-table {
+  width: 100%;
+  border-collapse: collapse;
   text-align: center;
-  padding: 10px;    /*设置内边距为10像素。*/
-  height: 40px; /* 设置表头单元格的固定高度*/
+  background-color: white;
 }
 
-/* 表体样式 */
-.tabel-container td {
-  border: 1px solid #ccc;  /*设置边框为1像素实心灰色。*/
-  padding: 10px;  /*设置内边距为10像素。*/
-  text-align: center;  /*使文字水平居中。*/
-  vertical-align: middle;  /*使文字垂直居中。*/
-  width: 150px; /*为表格单元格设置固定宽度。*/
-  height: 40px; /* 设置表格单元格的固定高度*/
-  overflow: hidden;  /*隐藏超出单元格宽度的内容。*/
-  text-overflow: ellipsis;  /*超出部分显示省略号*/
+.schedule-table th,
+.schedule-table td {
+  border: 1px solid #ebeef5;
+  padding: 12px;
+  font-size: 14px;
 }
 
-/* 第一列样式 */
-.tabel-container td:first-child {
-  font-weight: bold;   /*设置文字粗体。*/
-  width: 100px;     /* 调整第一列的宽度 */
+.schedule-table thead {
+  background-color: #f2f6fc;
+  font-weight: bold;
 }
 
-/* 课时信息样式 */
-.tabel-container .lesson-info {
-  margin-bottom: 5px;   /*设置底部外边距为5像素。*/
+.schedule-table tbody tr:hover {
+  background-color: #f5f7fa;
 }
 
-/* 课程信息样式 */
-.tabel-container .period {
-  font-size: 12px;   /*设置文字大小为12像素。*/
-  color: #677998;    /* 设置文字颜色为深蓝灰色。*/
+.period {
+  color: #999;
+  font-size: 12px;
 }
 
-/* 占位符样式,用于显示空单元格 */
-.tabel-container td:empty:before {
-  content: "-";
-  color: #ccc;
-  display: flex; /* 使用 Flex 布局 */
-  justify-content: center; /* 水平居中 */
-  align-items: center; /* 垂直居中 */
-}
 </style>
 

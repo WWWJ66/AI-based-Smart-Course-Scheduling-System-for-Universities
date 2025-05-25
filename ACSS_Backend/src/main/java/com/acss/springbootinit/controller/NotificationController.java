@@ -19,10 +19,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import java.util.List;
 
-/**
- * @author Jack Chen
- * @since 2023-05-20
- */
+
 @RestController
 @RequestMapping("/notification")
 public class NotificationController {

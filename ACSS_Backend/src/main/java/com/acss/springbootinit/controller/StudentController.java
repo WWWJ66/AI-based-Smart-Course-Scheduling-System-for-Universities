@@ -1,3 +1,7 @@
+/**
+ * @ClassName StudentController
+ * @Description [学生信息相关的控制器，提供学生信息的增删改查、导出等接口]
+ */
 package com.acss.springbootinit.controller;
 
 import cn.dev33.satoken.stp.StpUtil;
@@ -38,7 +42,13 @@ public class StudentController {
     @Resource
     private IUserService userService;
 
-    //新增或者更新
+    /**
+     * 新增或更新学生信息接口
+     * 只有系统管理员或对应学院管理员有权限操作
+     *
+     * @param student 学生实体
+     * @return 操作结果
+     */
     @PostMapping
     public Result save(@RequestBody Student student) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -55,6 +65,12 @@ public class StudentController {
         }
     }
 
+    /**
+     * 内部方法：保存学生数据
+     * 包含新增学生时创建对应用户和更新班级学生人数
+     *
+     * @param student 学生实体
+     */
     private void saveStudentData(Student student) {
         try {
             // 若为新增学生，则添加用户数据
@@ -71,7 +87,13 @@ public class StudentController {
         }
     }
 
-    //删除学生
+    /**
+     * 删除学生接口
+     * 只有系统管理员或对应学院管理员有权限操作
+     *
+     * @param id 学生ID
+     * @return 操作结果
+     */
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Integer id) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -94,71 +116,95 @@ public class StudentController {
         }
     }
 
+    /**
+     * 内部方法：删除学生相关数据
+     * 包含删除学生对应的用户账号和学生实体
+     *
+     * @param id 学生ID
+     */
     private void deleteStudentData(Integer id) {
         studentService.deleteStudentUser(id);
         studentService.removeById(id);
     }
 
+    /**
+     * 批量删除学生接口
+     * 系统管理员可删除所有学生，管理员可删除本学院学生
+     *
+     * @param ids 学生ID列表
+     * @return 操作结果
+     */
+    @PostMapping("/del/batch")
+    public Result deleteBatch(@RequestBody List<Integer> ids) { //批量删除
+        UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
+        String role = userInfo.getRole();
+        String college = userInfo.getCollege();
 
-@PostMapping("/del/batch")
-public Result deleteBatch(@RequestBody List<Integer> ids) { //批量删除
-    UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
-    String role = userInfo.getRole();
-    String college = userInfo.getCollege();
-
-    if (ConstantInfo.ROLE_ADMINISTRATOR.equals(role)) {
-        // 系统管理员有权限操作所有学生
-        if (!ids.isEmpty()) {
-            for (int id : ids) {
-                Student student = studentService.getById(id);
-                studentService.deleteStudentUser(id);     //先删用户，后删学生
-                //修改对应班级人数
-                studentService.updateClassStudentNumber(student.getClassNo(),-1);
-            }
-            studentService.removeByIds(ids);
-        }
-        return Result.success();
-    } else if (ConstantInfo.ROLE_ADMIN.equals(role)) {
-        // 管理员有权限操作本学院学生
-        if (!ids.isEmpty()) {
-            for (int id : ids) {
-                Student student = studentService.getById(id);
-                if (student != null && college.equals(student.getCollegeNo())) {
-                    studentService.deleteStudentUser(id);
-                    studentService.removeById(id);
+        if (ConstantInfo.ROLE_ADMINISTRATOR.equals(role)) {
+            // 系统管理员有权限操作所有学生
+            if (!ids.isEmpty()) {
+                for (int id : ids) {
+                    Student student = studentService.getById(id);
+                    studentService.deleteStudentUser(id);     //先删用户，后删学生
                     //修改对应班级人数
                     studentService.updateClassStudentNumber(student.getClassNo(),-1);
                 }
+                studentService.removeByIds(ids);
             }
+            return Result.success();
+        } else if (ConstantInfo.ROLE_ADMIN.equals(role)) {
+            // 管理员有权限操作本学院学生
+            if (!ids.isEmpty()) {
+                for (int id : ids) {
+                    Student student = studentService.getById(id);
+                    if (student != null && college.equals(student.getCollegeNo())) {
+                        studentService.deleteStudentUser(id);
+                        studentService.removeById(id);
+                        //修改对应班级人数
+                        studentService.updateClassStudentNumber(student.getClassNo(),-1);
+                    }
+                }
+            }
+            return Result.success();
+        } else {
+            // 其他角色无权限
+            return Result.error(ConstantInfo.CODE_401, "权限不足");
         }
-        return Result.success();
-    } else {
-        // 其他角色无权限
-        return Result.error(ConstantInfo.CODE_401, "权限不足");
     }
-}
 
 
-//进行编辑时查询数据
-@GetMapping("/{id}")
-public Result findOne(@PathVariable Integer id) {
-    UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
-    String role = userInfo.getRole();
-    String college = userInfo.getCollege();
+    /**
+     * 根据学生ID查询学生信息接口（编辑用）
+     * 只有系统管理员或对应学院管理员有权限访问
+     *
+     * @param id 学生ID
+     * @return 学生信息或错误信息
+     */
+    @GetMapping("/{id}")
+    public Result findOne(@PathVariable Integer id) {
+        UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
+        String role = userInfo.getRole();
+        String college = userInfo.getCollege();
 
-    Student student = studentService.getById(id);
-    if (student == null) {
-        return Result.error(ConstantInfo.CODE_404, "学生不存在");
+        Student student = studentService.getById(id);
+        if (student == null) {
+            return Result.error(ConstantInfo.CODE_404, "学生不存在");
+        }
+        if (ConstantInfo.ROLE_ADMINISTRATOR.equals(role) ||(ConstantInfo.ROLE_ADMIN.equals(role) && college.equals(student.getCollegeNo()))) {
+            // 系统管理员有权限操作所有学生，或者管理员有权限操作本学院学生
+            return Result.success(student);
+        } else {
+            // 其他角色无权限
+            return Result.error(ConstantInfo.CODE_401, "权限不足");
+        }
     }
-    if (ConstantInfo.ROLE_ADMINISTRATOR.equals(role) ||(ConstantInfo.ROLE_ADMIN.equals(role) && college.equals(student.getCollegeNo()))) {
-        // 系统管理员有权限操作所有学生，或者管理员有权限操作本学院学生
-        return Result.success(student);
-    } else {
-        // 其他角色无权限
-        return Result.error(ConstantInfo.CODE_401, "权限不足");
-    }
-}
 
+    /**
+     * 根据学生学号查询所属班级号（学生角色专用）
+     *
+     * @param studentNo 学生学号
+     * @return 班级号或错误信息
+     */
     @GetMapping("/getClassNoByStudentNo/{studentNo}")
     public Result getClassNoByStudentNo(@PathVariable String studentNo) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -178,53 +224,75 @@ public Result findOne(@PathVariable Integer id) {
         }
     }
 
-//查询所有数据
-@GetMapping("/page")
-public Result findPage(
-        @RequestParam Integer pageNum, @RequestParam Integer pageSize,
-        @RequestParam(defaultValue = "") String college,
-        @RequestParam(defaultValue = "") String grade,
-        @RequestParam(defaultValue = "") String classNo,
-        @RequestParam(defaultValue = "") String studentNo,
-        @RequestParam(defaultValue = "") String studentName,
-        @RequestParam(defaultValue = "") String term){
-    //如果是 ROLE_ADMINISTRATOR，则无论 college 是什么都能访问所有数据。如果是 ROLE_ADMIN，则只能访问当前用户所在学院的数据。
-    // 获取当前用户的角色信息
-    UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
-    String role = userInfo.getRole();
-    // 判断权限
-    if (ConstantInfo.ROLE_ADMINISTRATOR.equals(role)) {
-        // 如果是系统管理员，使用当前用户的学院信息
-        return Result.success(studentService.findPage(new Page<>(pageNum, pageSize), college, grade, classNo, studentNo, studentName));
+    /**
+     * 分页查询学生信息接口
+     * 根据用户角色限制可访问的数据范围
+     *
+     * @param pageNum 当前页码
+     * @param pageSize 每页条数
+     * @param college 学院筛选
+     * @param grade 年级筛选
+     * @param classNo 班级筛选
+     * @param studentNo 学号筛选
+     * @param studentName 姓名筛选
+     * @param term 学期筛选
+     * @return 分页查询结果
+     */
+    @GetMapping("/page")
+    public Result findPage(
+            @RequestParam Integer pageNum, @RequestParam Integer pageSize,
+            @RequestParam(defaultValue = "") String college,
+            @RequestParam(defaultValue = "") String grade,
+            @RequestParam(defaultValue = "") String classNo,
+            @RequestParam(defaultValue = "") String studentNo,
+            @RequestParam(defaultValue = "") String studentName,
+            @RequestParam(defaultValue = "") String term){
+        //如果是 ROLE_ADMINISTRATOR，则无论 college 是什么都能访问所有数据。如果是 ROLE_ADMIN，则只能访问当前用户所在学院的数据。
+        // 获取当前用户的角色信息
+        UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
+        String role = userInfo.getRole();
+        // 判断权限
+        if (ConstantInfo.ROLE_ADMINISTRATOR.equals(role)) {
+            // 如果是系统管理员，使用当前用户的学院信息
+            return Result.success(studentService.findPage(new Page<>(pageNum, pageSize), college, grade, classNo, studentNo, studentName));
 
-    } else if (ConstantInfo.ROLE_ADMIN.equals(role)) {
-        // 如果是管理员，只能访问当前用户所在学院的数据
-        college = userInfo.getCollege();
-        return Result.success(studentService.findPage(new Page<>(pageNum, pageSize), college, grade, classNo, studentNo, studentName));
-    } else if (ConstantInfo.ROLE_TEACHER.equals(role)) {
-        return Result.success(studentService.findPageByTeacher(new Page<>(pageNum, pageSize),term,StpUtil.getLoginIdAsString(), classNo,studentNo, studentName));
-    } else {
-        // 其他角色没有权限
-        return Result.error(ConstantInfo.CODE_401, "权限不足");
+        } else if (ConstantInfo.ROLE_ADMIN.equals(role)) {
+            // 如果是管理员，只能访问当前用户所在学院的数据
+            college = userInfo.getCollege();
+            return Result.success(studentService.findPage(new Page<>(pageNum, pageSize), college, grade, classNo, studentNo, studentName));
+        } else if (ConstantInfo.ROLE_TEACHER.equals(role)) {
+            return Result.success(studentService.findPageByTeacher(new Page<>(pageNum, pageSize),term,StpUtil.getLoginIdAsString(), classNo,studentNo, studentName));
+        } else {
+            // 其他角色没有权限
+            return Result.error(ConstantInfo.CODE_401, "权限不足");
+        }
     }
-}
 
-//生成学号
-@PostMapping("/generateStudentNo")
-public Result generateStudentNo(@RequestBody Map<String, Object> requestData) {
-    // 获取 form 中的参数
-    String classNo = String.valueOf(requestData.get("classNo"));
+    /**
+     * 生成学号
+     *
+     * @param requestData 请求数据
+     * @return 生成的学号
+     */
+    @PostMapping("/generateStudentNo")
+    public Result generateStudentNo(@RequestBody Map<String, Object> requestData) {
+        // 获取 form 中的参数
+        String classNo = String.valueOf(requestData.get("classNo"));
 
-    // 查询数据库中学号最后两位最大的数
-    int maxLastTwoDigits = studentService.getMaxLastTwoDigits(classNo);
+        // 查询数据库中学号最后两位最大的数
+        int maxLastTwoDigits = studentService.getMaxLastTwoDigits(classNo);
 
-    // 生成新的学号
-    String studentNo = classNo + String.format("%02d", maxLastTwoDigits + 1);
+        // 生成新的学号
+        String studentNo = classNo + String.format("%02d", maxLastTwoDigits + 1);
 
-    // 返回生成的学号到前端
-    return Result.success("学号生成成功！",studentNo);
-}
+        // 返回生成的学号到前端
+        return Result.success("学号生成成功！",studentNo);
+    }
 
+    /**
+     * 导出数据
+     *
+     */
     @GetMapping("/export")
     public void export(HttpServletResponse response,
                        @RequestParam(defaultValue = "") String college,
@@ -278,7 +346,11 @@ public Result generateStudentNo(@RequestBody Map<String, Object> requestData) {
         return  URLEncoder.encode(fileName, "UTF-8");
     }
 
-
+    /**
+     * 导入数据
+     *
+     * @param file 请求数据
+     */
     @RequestMapping("/import")
     @ResponseBody
     public Result importExcel(/*@RequestParam("excelFile")*/ MultipartFile file){
@@ -300,44 +372,3 @@ public Result generateStudentNo(@RequestBody Map<String, Object> requestData) {
     }
 
 }
-
-//数据导出
-/*@GetMapping("/export")
-public Result export(HttpServletResponse response,
-                     @RequestParam(defaultValue = "") String college,
-                     @RequestParam(defaultValue = "") String grade,
-                     @RequestParam(defaultValue = "") String classNo,
-                     @RequestParam(defaultValue = "") String studentNo,
-                     @RequestParam(defaultValue = "") String studentName) throws IOException {
-
-    UserDTO userInfo = TokenUtils.getCurrentUserRoleAndCollege();
-    if (userInfo == null) {
-        return Result.error(ConstantInfo.CODE_404, "用户信息获取失败");
-    }
-    String role = userInfo.getRole();
-
-    if(ConstantInfo.ROLE_ADMIN.equals(role)){
-        //对管理员进行权限控制
-        college=userInfo.getCollege();
-    }
-    // 从数据库查询出所有的数据
-    List<StudentDTO> list = studentService.export(college, grade, classNo, studentNo, studentName);
-    // 这里注意 有同学反应使用swagger 会导致各种问题，请直接用浏览器或者用postman
-    response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-    response.setCharacterEncoding("utf-8");
-    // 这里URLEncoder.encode可以防止中文乱码 当然和easyexcel没有关系
-    String fileName = URLEncoder.encode("学生信息", "UTF-8").replaceAll("\\+", "%20");
-    response.setHeader("Content-disposition", "attachment;filename*=utf-8''" + fileName + ".xlsx");
-    EasyExcel.write(response.getOutputStream(), StudentDTO.class).sheet("学生信息").doWrite(list);
-    return Result.success();
-}*/
-
-
-//导入Excel
-/*
-@RequestMapping("/import")
-@ResponseBody
-public Result importExcel(*//*@RequestParam(value = "excelFile")*//* MultipartFile file) throws IOException{
-    EasyExcel.read(file.getInputStream(), StudentDTO.class, new StudentExcelListener(studentService)).sheet().doRead();
-    return Result.success();
-}*/

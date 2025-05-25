@@ -15,7 +15,7 @@ public interface ConstantInfo {
 
     String DICT_TYPE_ICON = "icon";
 
-
+    // 系统角色
     String ROLE_ADMINISTRATOR = "ROLE_ADMINISTRATOR";
     String ROLE_ADMIN = "ROLE_ADMIN";
     String ROLE_TEACHER = "ROLE_TEACHER";

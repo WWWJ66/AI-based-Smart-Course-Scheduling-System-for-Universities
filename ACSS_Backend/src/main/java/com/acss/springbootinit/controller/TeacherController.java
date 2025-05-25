@@ -1,3 +1,7 @@
+/**
+ * @ClassName TeacherController
+ * @Description [教师信息管理相关接口]
+ */
 package com.acss.springbootinit.controller;
 
 
@@ -39,7 +43,13 @@ public class TeacherController {
 
     @Resource
     private IUserService userService;
-    //新增或者更新
+
+    /**
+     * 新增或更新教师信息
+     * 系统管理员可以操作所有教师，管理员仅可操作本学院教师
+     * @param teacher 教师实体对象
+     * @return 操作结果
+     */
     @PostMapping
     @Transactional
     public Result save(@RequestBody Teacher teacher) {
@@ -61,7 +71,12 @@ public class TeacherController {
         }
     }
 
-    //删除
+    /**
+     * 删除指定ID的教师信息
+     * 系统管理员可删除所有教师，管理员仅可删除本学院教师
+     * @param id 教师ID
+     * @return 操作结果
+     */
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Integer id) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -83,6 +98,12 @@ public class TeacherController {
         }
     }
 
+    /**
+     * 批量删除教师
+     * 系统管理员删除所有教师，管理员删除本学院教师
+     * @param ids 教师ID列表
+     * @return 操作结果
+     */
     @PostMapping("/del/batch")
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -103,6 +124,10 @@ public class TeacherController {
         }
     }
 
+    /**
+     * 批量删除所有教师
+     * @param ids 教师ID列表
+     */
     private void deleteTeacherBatch(List<Integer> ids) {
         if (!ids.isEmpty()) {
             teacherService.removeByIds(ids);
@@ -112,6 +137,11 @@ public class TeacherController {
         }
     }
 
+    /**
+     * 批量删除指定学院的教师
+     * @param ids 教师ID列表
+     * @param college 学院编号
+     */
     private void deleteTeacherBatchInCollege(List<Integer> ids, String college) {
         if (!ids.isEmpty()) {
             for (int id : ids) {
@@ -124,7 +154,11 @@ public class TeacherController {
         }
     }
 
-
+    /**
+     * 查询所有教师信息
+     * 系统管理员可查看所有，管理员只能查看本学院教师，其他角色无权限
+     * @return 教师列表
+     */
     @GetMapping
     public Result findAll() {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -145,7 +179,12 @@ public class TeacherController {
         return Result.success(teacherService.list(queryWrapper));
     }
 
-
+    /**
+     * 根据ID查询教师信息
+     * 系统管理员或本学院管理员有权限查看，其他角色无权限
+     * @param id 教师ID
+     * @return 教师信息
+     */
     @GetMapping("/{id}")
     public Result findOne(@PathVariable Integer id) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -165,6 +204,11 @@ public class TeacherController {
         }
     }
 
+    /**
+     * 根据教师工号查询教师姓名
+     * @param teacherNo 教师工号
+     * @return 教师姓名
+     */
     @GetMapping("/selectByTeacherNo/{teacherNo}")
     public Result selectByTeacherNo(@PathVariable String teacherNo) {
         QueryWrapper<Teacher> queryWrapper = new QueryWrapper<>();
@@ -177,6 +221,11 @@ public class TeacherController {
         }
     }
 
+    /**
+     * 根据学院编号查询教师列表
+     * @param college 学院编号
+     * @return 教师列表
+     */
     @GetMapping("/selectByCollege/{college}")
     public Result selectByCollege(@PathVariable String college) {
         QueryWrapper<Teacher> queryWrapper = new QueryWrapper<>();
@@ -184,6 +233,11 @@ public class TeacherController {
         return Result.success(teacherService.list(queryWrapper));
     }
 
+    /**
+     * 根据学院信息生成新的教师工号
+     * @param requestData 请求数据，包含学院编号
+     * @return 生成的教师工号
+     */
     @PostMapping("/generateTeacherNo")
     public Result generateTeacherNo(@RequestBody Map<String, Object> requestData) {
 
@@ -200,7 +254,16 @@ public class TeacherController {
         return Result.success("工号生成成功！",teacherNo);
     }
 
-
+    /**
+     * 分页查询教师信息
+     * 管理员仅能查询本学院教师，系统管理员查询所有
+     * @param pageNum 当前页码
+     * @param pageSize 页面大小
+     * @param teacherNo 教师工号（可选）
+     * @param teacherName 教师姓名（可选）
+     * @param college 学院编号（可选）
+     * @return 分页结果
+     */
     @GetMapping("/page")
     public Result findPage(@RequestParam Integer pageNum, @RequestParam Integer pageSize,
                            @RequestParam(defaultValue = "") String teacherNo,

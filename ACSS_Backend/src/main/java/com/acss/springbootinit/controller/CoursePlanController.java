@@ -1,3 +1,7 @@
+/**
+ * @ClassName CoursePlanController
+ * @Description [处理课程计划有关的请求]
+ */
 package com.acss.springbootinit.controller;
 
 
@@ -29,7 +33,12 @@ public class CoursePlanController {
     @Resource
     private IUserService userService;
 
-    //新增或者更新
+    /**
+     * 保存课程计划信息
+     *
+     * @param coursePlan 请求体，包含学期、学院、年级编号等信息
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping
     public Result save(@RequestBody CoursePlan coursePlan) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -45,7 +54,12 @@ public class CoursePlanController {
         }
     }
 
-    //删除
+    /**
+     * 删除课程计划
+     *
+     * @param id 计划id
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @DeleteMapping("/{id}")
     public Result delete(@PathVariable Integer id) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -65,7 +79,12 @@ public class CoursePlanController {
         }
     }
 
-    //批量删除
+    /**
+     * 批量删除课程计划
+     *
+     * @param ids 计划id列表
+     * @return 返回操作结果，根据结果返回信息码
+     */
     @PostMapping("/del/batch")
     public Result deleteBatch(@RequestBody List<Integer> ids) {
         UserDTO userInfo = userService.getUserRoleAndCollege(StpUtil.getLoginIdAsString());
@@ -93,7 +112,15 @@ public class CoursePlanController {
         }
     }
 
-    //分页获取
+    /**
+     * 分页查询课程计划
+     *
+     * @param pageNum 页数
+     * @param pageSize 每页个数
+     * @param college 学院名称
+     * @param classNo 班级编号
+     * @return 返回分页查询结果
+     */
     @GetMapping("/page")
     public Result findPage(@RequestParam Integer pageNum, @RequestParam Integer pageSize,
                            @RequestParam(defaultValue = "") String term,
@@ -132,7 +159,11 @@ public class CoursePlanController {
         return Result.success(coursePlanService.page(new Page<>(pageNum, pageSize), queryWrapper));
     }
 
-    //排课
+    /**
+     * 排课
+     *
+     * @param term 学期
+     */
     @SaCheckRole("ROLE_ADMINISTRATOR")
     @GetMapping("/arrange/{term}")
     public Result arrange(@PathVariable("term") String term) {

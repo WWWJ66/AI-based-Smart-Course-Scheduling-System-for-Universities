@@ -1,36 +1,89 @@
 <template>
-  <div style="color: #666">
-    <div style="margin: 10px 0">
-      <el-select  style="width: 200px" v-model="college"  class="ml-5" v-if="isAdministrator" placeholder="请选择学院" >
-        <el-option v-for="item in colleges" :key="item.name" :label="item.name" :value="item.value">
-          {{ item.name }}
-        </el-option>
-      </el-select>
-      <el-input style="width: 200px" placeholder="请输入名称"  class="ml-5" suffix-icon="el-icon-search" v-model="title"></el-input>
-      <el-button class="ml-5" type="primary" @click="load" size="small">搜索</el-button>
-      <el-button type="warning" @click="reset" size="small">重置</el-button>
-    </div>
+  <div class="page-container">
+    <!-- 搜索栏 -->
+    <div class="search-section">
+      <el-card shadow="hover" class="search-card">
+        <div class="flex-container">
+          <el-select 
+            v-if="isAdministrator"
+            v-model="college"
+            placeholder="请选择学院"
+            class="decorated-select"
+            popper-class="select-dropdown"
+          >
+            <el-option
+              v-for="item in colleges"
+              :key="item.name"
+              :label="item.name"
+              :value="item.value"
+              class="select-option"
+            />
+          </el-select>
 
-    <div style="margin: 10px 0">
-      <div style="padding: 10px 0; border-bottom: 1px dashed #ccc" v-for="item in tableData" :key="item.id">
-        <div class="pd-10" style="font-size: 20px; color: #3F5EFB; cursor: pointer" @click="goToNotificationDetail(item.id)">{{ item.title }}</div>
-        <div style="font-size: 14px; margin-top: 10px">
-          <i class="el-icon-user-solid"></i> <span>{{ userNames[item.user] }}</span>
-          <i class="el-icon-time" style="margin-left: 10px"></i> <span>{{ item.time }}</span>
+          <el-input
+            v-model="title"
+            placeholder="请输入名称"
+            class="styled-input"
+            suffix-icon="el-icon-search"
+          />
+
+          <div class="button-group">
+            <el-button 
+              type="primary" 
+              class="action-btn search-btn"
+              @click="load"
+            >
+              <i class="el-icon-search"></i> 搜索
+            </el-button>
+            <el-button 
+              type="info" 
+              class="action-btn reset-btn"
+              @click="reset"
+            >
+              <i class="el-icon-refresh"></i> 重置
+            </el-button>
+          </div>
         </div>
-      </div>
+      </el-card>
     </div>
 
-    <div style="padding: 10px 0">
+    <!-- 通知列表 -->
+    <div class="content-section">
+      <el-card shadow="never" class="list-card">
+        <div 
+          v-for="item in tableData" 
+          :key="item.id"
+          class="list-item animated-item"
+          @click="goToNotificationDetail(item.id)"
+        >
+          <div class="item-content">
+            <h3 class="item-title gradient-text">{{ item.title }}</h3>
+            <div class="meta-info">
+              <div class="meta-item">
+                <i class="el-icon-user-solid icon-accent"></i>
+                <span class="meta-text">{{ userNames[item.user] }}</span>
+              </div>
+              <div class="meta-item">
+                <i class="el-icon-time icon-accent"></i>
+                <span class="meta-text">{{ item.time }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </el-card>
+    </div>
+
+    <!-- 分页 -->
+    <div class="pagination-wrapper">
       <el-pagination
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :current-page="pageNum"
-          :page-sizes="[2, 5, 10, 20]"
-          :page-size="pageSize"
-          layout="total, prev, pager, next"
-          :total="total">
-      </el-pagination>
+        background
+        :current-page="pageNum"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, prev, pager, next, jumper"
+        class="styled-pagination"
+        @current-change="handleCurrentChange"
+      />
     </div>
   </div>
 </template>
@@ -157,5 +210,166 @@ export default {
 </script>
 
 <style scoped>
+.page-container {
+  background: #f5f7fa;
+  min-height: 100vh;
+  padding: 20px;
+}
 
+/* 搜索栏样式 */
+.search-section {
+  margin-bottom: 24px;
+}
+
+.search-card {
+  border-radius: 12px;
+  border: 1px solid #ebeef5;
+  background: linear-gradient(145deg, #ffffff, #f8f9fe);
+}
+
+.flex-container {
+  display: flex;
+  gap: 15px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.decorated-select {
+  width: 220px;
+}
+
+.styled-input {
+  flex: 1;
+  max-width: 400px;
+}
+
+.button-group {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  border-radius: 8px;
+  padding: 12px 24px;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.search-btn {
+  background: linear-gradient(45deg, #409eff, #3375ff);
+}
+
+.reset-btn {
+  background: linear-gradient(45deg, #909399, #6b7280);
+}
+
+.action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* 通知列表样式 */
+.content-section {
+  margin: 24px 0;
+}
+
+.list-card {
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.list-item {
+  padding: 20px;
+  border-bottom: 1px solid #eee;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.list-item:hover {
+  background: #f8f9fe;
+  transform: translateX(10px);
+  box-shadow: 4px 0 12px rgba(63, 94, 251, 0.1);
+}
+
+.item-title {
+  font-size: 18px;
+  color: #303133;
+  margin-bottom: 12px;
+  transition: color 0.3s;
+}
+
+.gradient-text {
+  background: linear-gradient(45deg, #3F5EFB, #6397ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.meta-info {
+  display: flex;
+  gap: 25px;
+  align-items: center;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.icon-accent {
+  color: #409eff;
+  font-size: 16px;
+}
+
+.meta-text {
+  color: #606266;
+  font-size: 14px;
+}
+
+/* 分页样式 */
+.pagination-wrapper {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+}
+
+.styled-pagination {
+  padding: 12px;
+  border-radius: 8px;
+  background: white;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* 动画效果 */
+.animated-item {
+  animation: slideIn 0.5s ease forwards;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 768px) {
+  .flex-container {
+    flex-direction: column;
+  }
+  
+  .styled-input,
+  .decorated-select {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .button-group {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
 </style>
