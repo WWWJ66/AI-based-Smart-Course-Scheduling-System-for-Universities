@@ -117,7 +117,7 @@
         </el-popconfirm>
 
         <el-upload 
-          action="http://localhost:8081/student/import"
+          action="/student/import"
           :show-file-list="false"
           :headers="uploadHeaders"
           class="ml-5">
@@ -481,7 +481,7 @@ export default {
     },
 
     exp() {
-      const exportUrl = `http://localhost:8081/student/export`;
+      const exportUrl = `/student/export`;
       // 使用 axios 发起 GET 请求
       axios({
         url: exportUrl,

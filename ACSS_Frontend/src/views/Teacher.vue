@@ -347,7 +347,7 @@ export default {
       })
     },
     exp() {
-      const exportUrl = `http://localhost:8081/teacher/export`;
+      const exportUrl = `/teacher/export`;
 
       // 使用 axios 发起 GET 请求
       axios({

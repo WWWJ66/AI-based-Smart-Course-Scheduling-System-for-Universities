@@ -223,7 +223,7 @@ export default {
 
       // 老师的课表请求地址和其他角色不一样
       const getRequestUrl = (isTeacher) => {
-        return isTeacher ? "http://localhost:8101/api/schedule/teacher" : "http://localhost:8101/api/schedule";
+        return isTeacher ? "/schedule/teacher" : "/schedule";
       };
 
       // 获取请求地址
